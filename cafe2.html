@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>English Cafe Chat</title>
+</head>
+<body>
+<h2>☕ Cafe English Practice</h2>
+
+<div id="chat" style="border:1px solid #ccc; padding:10px; height:300px; overflow:auto;"></div>
+
+<div id="buttons"></div>
+
+<input id="userInput" type="text" placeholder="Type your answer here..." style="width:80%;">
+<button onclick="sendMessage()">Send</button>
+<button onclick="startListening()">🎤 Speak</button>
+
+
+<script>
+let chatDiv = document.getElementById("chat");
+let buttonsDiv = document.getElementById("buttons");
+
+function startListening() {
+  const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+  recognition.lang = "en-US";
+
+  recognition.onresult = function(event) {
+    const text = event.results[0][0].transcript;
+    document.getElementById("userInput").value = text;
+    sendMessage();
+  };
+
+  recognition.start();
+}
+
+function speak(text) {
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "en-US";
+  speechSynthesis.speak(utterance);
+}
+
+function addMessage(sender, text) {
+  chatDiv.innerHTML += "<p><b>" + sender + ":</b> " + text + "</p>";
+  chatDiv.scrollTop = chatDiv.scrollHeight;
+
+  if (sender === "Barista") {
+    speak(text);
+  }
+}
+
+function setButtons(options) {
+buttonsDiv.innerHTML = "";
+options.forEach(option => {
+let btn = document.createElement("button");
+btn.innerText = option;
+btn.onclick = () => {
+document.getElementById("userInput").value = option;
+sendMessage();
+};
+buttonsDiv.appendChild(btn);
+});
+}
+
+function resetChat() {
+chatDiv.innerHTML = "";
+addMessage("Barista", "Hi! Here's our menu:\n- Coffee\n- Latte\n- Tea\nWhat would you like?");
+setButtons(["Coffee", "Latte", "Tea"]);
+}
+
+function sendMessage() {
+let input = document.getElementById("userInput");
+let userText = input.value;
+
+if (!userText) return;
+
+addMessage("You", userText);
+
+let reply = getAIResponse(userText);
+
+setTimeout(() => {
+addMessage("Barista", reply.text);
+setButtons(reply.options);
+}, 500);
+
+input.value = "";
+}
+
+function getAIResponse(text) {
+text = text.toLowerCase();
+
+if (text.includes("coffee") || text.includes("latte") || text.includes("tea")) {
+return {
+text: "Great choice! What size would you like?",
+options: ["Small", "Medium", "Large"]
+};
+}
+
+if (text.includes("small") || text.includes("medium") || text.includes("large")) {
+return {
+text: "Hot or iced?",
+options: ["Hot", "Iced"]
+};
+}
+
+if (text.includes("hot") || text.includes("iced")) {
+return {
+text: "Anything else?",
+options: ["That's all", "Add more"]
+};
+}
+
+if (text.includes("that's all") || text.includes("no")) {
+setTimeout(resetChat, 2000);
+return {
+text: "Perfect! Your total is $5. Thank you! 😊",
+options: []
+};
+}
+
+return {
+text: "Sorry, I didn't understand.",
+options: []
+};
+}
+
+// 初期表示
+resetChat();
+</script>
+</body>
+</html>
